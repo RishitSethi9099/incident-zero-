@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
 
-import { getRoleOrder, getRosterForTeam, setRosterForTeam, getRoomStateForTeam } from "@/app/api/pusher/store";
+import { getRoleOrder, getRosterForTeam, setRosterForTeam, getRoomStateForTeam, touchMember } from "@/app/api/pusher/store";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID ?? "",
@@ -10,6 +10,8 @@ const pusher = new Pusher({
   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? "",
   useTLS: true,
 });
+
+const MAX_TEAM_SIZE = 3;
 
 export async function POST(req: Request) {
   try {
@@ -26,13 +28,29 @@ export async function POST(req: Request) {
     const existing = current.find((m) => m.name === memberName);
 
     if (existing) {
+      touchMember(teamCode, existing);
       const roomState = getRoomStateForTeam(teamCode);
-      return NextResponse.json({ role: existing.role, channelName: `team-${teamCode}`, roomState });
+      return NextResponse.json({
+        role: existing.role,
+        channelName: `team-${teamCode}`,
+        roomState,
+        teamSize: Math.max(2, current.length) as 2 | 3,
+      });
+    }
+
+    if (current.length >= MAX_TEAM_SIZE) {
+      return new NextResponse(
+        `Team ${teamCode} is full.\nMaximum 3 members per team.\nContact your team for a new code.`,
+        { status: 409 },
+      );
     }
 
     const role = roleOrder[current.length] ?? null;
     if (!role) {
-      return NextResponse.json({ role: null, channelName: `team-${teamCode}` });
+      return new NextResponse(
+        `Team ${teamCode} is full.\nMaximum 3 members per team.\nContact your team for a new code.`,
+        { status: 409 },
+      );
     }
 
     const updated = [...current, { name: memberName, role }];
@@ -49,7 +67,12 @@ export async function POST(req: Request) {
 
     const roomState = getRoomStateForTeam(teamCode);
 
-    return NextResponse.json({ role, channelName: `team-${teamCode}`, roomState });
+    return NextResponse.json({
+      role,
+      channelName: `team-${teamCode}`,
+      roomState,
+      teamSize: Math.max(2, updated.length) as 2 | 3,
+    });
   } catch (e) {
     return new NextResponse("Failed to join team", { status: 500 });
   }

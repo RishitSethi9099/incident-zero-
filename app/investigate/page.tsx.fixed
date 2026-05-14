@@ -1,0 +1,17 @@
+      </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 h-12 z-50 bg-[#0C0F0E] border-t border-[#1E2623] flex items-center px-4 gap-3">
+        <DiscoveriesBar discoveries={roomState.discoveries} allArtifacts={allArtifacts} />
+      </div>
+
+      <PanelModals
+        showTicker={showTickerModal}
+        showCsv={false}
+        tickerClose={() => setShowTickerModal(false)}
+        csvClose={() => undefined}
+      />
+      <TeamChat />
+    </div>
+  );
+}

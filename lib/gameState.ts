@@ -6,6 +6,7 @@ export type GameState = {
   teamCode: string;
   memberName: string;
   role: Role;
+  teamSize: 2 | 3;
   currentPhase: 1 | 2 | 3;
   phase2Penalty: number;
   submissionUrl: string;
@@ -16,6 +17,7 @@ const DEFAULT_STATE: GameState = {
   teamCode: "",
   memberName: "",
   role: null,
+  teamSize: 2,
   currentPhase: 1,
   phase2Penalty: 0,
   submissionUrl: "",

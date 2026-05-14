@@ -40,6 +40,7 @@ export default function Home() {
       const data = (await res.json()) as {
         role: "Analyst" | "Communicator" | "Investigator" | null;
         roomState?: Record<string, unknown> | null;
+        teamSize?: 2 | 3;
       };
 
       if (!data.role) {
@@ -52,6 +53,7 @@ export default function Home() {
         memberName: memberName.trim(),
         role: data.role,
         currentPhase: 1,
+        teamSize: data.teamSize ?? 2,
       });
       // apply server room state (if any) to local storage so late joiners sync
       if (data.roomState) {
@@ -102,8 +104,13 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="mt-4 rounded-md border border-[#1E2623] bg-[#0C0F0E] px-4 py-3 text-xs text-[#5E7269]">
+            <div>⚠ Minimum 2 members required to begin.</div>
+            <div className="mt-1">Maximum 3 members per team.</div>
+          </div>
+
           {error && (
-            <div className="mt-4 rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
+            <div className="mt-4 whitespace-pre-line rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
               {error}
             </div>
           )}
