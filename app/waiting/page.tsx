@@ -78,16 +78,62 @@ export default function WaitingPage() {
     fetch(`/api/pusher/roster?teamCode=${team.teamCode}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { members?: Member[] } | null) => {
-        if (data?.members?.length) setMembers(data.members);
+        const fetched = data?.members ?? [];
+        // include self and dedupe by name
+        const byName = new Map<string, Member>();
+        for (const m of [...fetched, self]) byName.set(m.name, m);
+        const list = Array.from(byName.values());
+        // sort by role order (Analyst, Communicator, Investigator, null last)
+        const order = (r: Member["role"]) => {
+          const idx = ROLE_ORDER.indexOf(r);
+          return idx === -1 ? 99 : idx;
+        };
+        list.sort((a, b) => order(a.role) - order(b.role));
+        if (list.length) setMembers(list);
       })
       .catch(() => undefined);
 
     channel.bind("member-joined", (data: Member) => {
       setMembers((prev) => {
         const exists = prev.some((m) => m.name === data.name);
-        return exists ? prev : [...prev, data];
+        const next = exists ? prev : [...prev, data];
+        // sort by role order
+        next.sort((a, b) => {
+          const ia = ROLE_ORDER.indexOf(a.role);
+          const ib = ROLE_ORDER.indexOf(b.role);
+          const va = ia === -1 ? 99 : ia;
+          const vb = ib === -1 ? 99 : ib;
+          return va - vb;
+        });
+        try {
+          writeLocalMembers(team.teamCode, next);
+        } catch {}
+        return next;
       });
     });
+
+    const onMemberJoined = (ev: Event) => {
+      // also handle window-dispatched joins
+      try {
+        const detail = (ev as CustomEvent).detail as Member;
+        setMembers((prev) => {
+          const exists = prev.some((m) => m.name === detail.name);
+          const next = exists ? prev : [...prev, detail];
+          next.sort((a, b) => {
+            const ia = ROLE_ORDER.indexOf(a.role);
+            const ib = ROLE_ORDER.indexOf(b.role);
+            const va = ia === -1 ? 99 : ia;
+            const vb = ib === -1 ? 99 : ib;
+            return va - vb;
+          });
+          try {
+            writeLocalMembers(team.teamCode, next);
+          } catch {}
+          return next;
+        });
+      } catch {}
+    };
+    window.addEventListener("team-member-joined", onMemberJoined as any);
 
     channel.bind("team-ready", () => {
       setCountdown(3);
@@ -95,6 +141,7 @@ export default function WaitingPage() {
 
     return () => {
       pusherClient.unsubscribe(`team-${team.teamCode}`);
+      window.removeEventListener("team-member-joined", onMemberJoined as any);
     };
   }, [router, team.memberName, team.role, team.teamCode]);
 
@@ -113,6 +160,8 @@ export default function WaitingPage() {
     return () => window.clearTimeout(id);
   }, [countdown, router]);
 
+  const ROLE_ORDER: Array<Member["role"]> = ["Analyst", "Communicator", "Investigator"];
+
   return (
     <div className="min-h-[calc(100vh-104px)] px-6 py-10">
       <div className="mx-auto w-full max-w-[720px]">
@@ -126,46 +175,36 @@ export default function WaitingPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-3">
-            {members.map((m) => (
-              <div
-                key={m.name}
-                className="rounded-md border border-[#1E2623] bg-[#0C0F0E] p-3"
-              >
-                <div className="text-sm font-semibold text-[#E8F0ED]">
-                  {m.name}
+            {ROLE_ORDER.map((role, idx) => {
+              const m = members.find((x) => x.role === role);
+              return m ? (
+                <div key={m.name} className="rounded-md border border-[#1E2623] bg-[#0C0F0E] p-3">
+                  <div className="text-sm font-semibold text-[#E8F0ED] truncate">{m.name}</div>
+                  <div className="mt-1 text-xs text-[#5E7269]">{m.role}</div>
                 </div>
-                <div className="mt-1 text-xs text-[#5E7269]">
-                  {m.role ?? "Assigning role"}
+              ) : (
+                <div key={`slot-${idx}`} className="rounded-md border border-dashed border-[#1E2623] bg-[#0C0F0E]/40 p-3 text-xs text-[#5E7269]">
+                  Awaiting {role}...
                 </div>
-              </div>
-            ))}
-            {Array.from({ length: Math.max(0, 3 - members.length) }).map((_, idx) => (
-              <div
-                key={`slot-${idx}`}
-                className="rounded-md border border-dashed border-[#1E2623] bg-[#0C0F0E]/40 p-3 text-xs text-[#5E7269]"
-              >
-                Awaiting teammate...
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-6 rounded-md border border-[#1E2623] bg-[#0C0F0E] px-4 py-3 text-sm text-[#5E7269]">
             {hasPusherClient
-              ? "We will begin once all roles are filled."
+              ? "Start when you are ready or wait for more teammates to join."
               : "Pusher is not configured. Enter your team code in one browser and press Start anyway."}
           </div>
 
-          {!hasPusherClient && (
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={() => router.push("/investigate")}
-                className="rounded-md bg-[#1D9E75] px-4 py-2 text-sm font-semibold text-[#0C0F0E]"
-              >
-                Start anyway →
-              </button>
-            </div>
-          )}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => router.push("/investigate")}
+              className="rounded-md bg-[#1D9E75] px-4 py-2 text-sm font-semibold text-[#0C0F0E]"
+            >
+              Enter now →
+            </button>
+          </div>
 
           {countdown !== null && (
             <div className="mt-6 text-center text-4xl font-semibold text-[#1D9E75]">

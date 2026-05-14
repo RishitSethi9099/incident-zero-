@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { setGameState } from "@/lib/gameState";
+import { updateRoomState } from "@/lib/roomState";
 
 export default function Home() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function Home() {
 
       const data = (await res.json()) as {
         role: "Analyst" | "Communicator" | "Investigator" | null;
+        roomState?: Record<string, unknown> | null;
       };
 
       if (!data.role) {
@@ -51,6 +53,10 @@ export default function Home() {
         role: data.role,
         currentPhase: 1,
       });
+      // apply server room state (if any) to local storage so late joiners sync
+      if (data.roomState) {
+        updateRoomState(data.roomState as any);
+      }
       router.push("/waiting");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to join team");

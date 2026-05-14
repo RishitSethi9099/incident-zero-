@@ -40,6 +40,12 @@ function csvFromRouting() {
   return lines.join("\n");
 }
 
+function avatarClass(sender: string) {
+  if (sender === "Arjun") return "bg-[#1D4ED8] text-white";
+  if (sender === "Priya") return "bg-[#0F766E] text-white";
+  return "bg-[#1E2623] text-[#E8F0ED]";
+}
+
 export function SlackChannel({
   messages,
   roomState,
@@ -47,6 +53,7 @@ export function SlackChannel({
   onAttachmentOpened,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [showCsv, setShowCsv] = useState(false);
 
   const csv = useMemo(() => csvFromRouting(), []);
 
@@ -67,37 +74,37 @@ export function SlackChannel({
         }}
       >
         {messages.map((m, idx) => (
-          <div key={`${m.time}-${idx}`} className="flex gap-3">
-            <div className="h-8 w-8 rounded-full bg-[#1E2623] text-xs text-[#E8F0ED] flex items-center justify-center">
+          <div key={`${m.time}-${idx}`} className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2">
+            <div className="flex items-start gap-3">
+            <div className={`h-8 w-8 rounded-full text-xs font-semibold flex items-center justify-center ${avatarClass(m.sender)}`}>
               {initials(m.sender)}
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-[#E8F0ED]">
-                  {m.sender}
-                </div>
-                <div className="text-[11px] text-[#5E7269]">{m.time}</div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-semibold text-[#E8F0ED]">{m.sender}</div>
+                <div className="text-[11px] text-[#5E7269] whitespace-nowrap">{m.time}</div>
               </div>
-              <div className="mt-1 text-sm text-[#E8F0ED] break-words">{m.text}</div>
+              <div className="mt-1 text-sm font-normal text-[#E8F0ED] break-words">{m.text}</div>
               {m.attachment && (
                 <button
                   type="button"
                   onClick={() => {
-                    setOpen(true);
+                    setShowCsv(true);
                     if (!roomState.priyaAttachmentOpened) onAttachmentOpened();
                   }}
-                  className="mt-2 inline-flex items-center gap-2 rounded-md border border-[#1E2623] bg-[#0C0F0E] px-2 py-1 text-xs text-[#E8F0ED]"
+                  className="mt-2 inline-flex items-center gap-2 rounded-md border border-[#1E2623] bg-[#1A2420] px-3 py-2 text-xs text-[#E8F0ED] cursor-pointer"
                 >
                   <span className="text-[#5E7269]">📎</span>
                   {m.attachment}
                 </button>
               )}
             </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {open && (
+      {showCsv && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-[680px] rounded-lg border border-[#1E2623] bg-[#131817] p-5">
             <div className="text-sm font-semibold text-[#E8F0ED]">
@@ -109,7 +116,7 @@ export function SlackChannel({
             <div className="mt-4 flex justify-end">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => setShowCsv(false)}
                 className="rounded-md border border-[#1E2623] px-3 py-1.5 text-sm text-[#E8F0ED]"
               >
                 Close

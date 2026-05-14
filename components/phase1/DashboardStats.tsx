@@ -29,16 +29,16 @@ export function DashboardStats({ zones, roomState, onErrorModal, onZoneF }: Prop
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-[#1E2623] bg-[#131817] p-4">
+    <div className="space-y-3 text-sm">
+      <div className="rounded-lg border border-[#1E2623] bg-[#131817] p-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-3xl font-semibold tabular-nums text-[#1D9E75]">
+            <div className="text-2xl font-semibold tabular-nums text-[#1D9E75]">
               {count}
             </div>
-            <div className="mt-1 text-sm text-[#E8F0ED]">Pending Requests</div>
-            <div className="mt-1 text-xs text-[#5E7269]">
-              ↑ +1 every 12 seconds
+            <div className="mt-1 text-xs text-[#E8F0ED]">Pending ticker</div>
+            <div className="mt-1 text-[11px] text-[#5E7269]">
+              +1 / 12s
             </div>
           </div>
           <button
@@ -55,9 +55,9 @@ export function DashboardStats({ zones, roomState, onErrorModal, onZoneF }: Prop
         </div>
       </div>
 
-      <div className="rounded-lg border border-[#1E2623] bg-[#0C0F0E] p-4">
-        <div className="text-sm font-semibold text-[#E8F0ED]">Zone Status</div>
-        <div className="mt-3">
+      <div className="rounded-lg border border-[#1E2623] bg-[#0C0F0E] p-3">
+        <div className="text-sm font-semibold text-[#E8F0ED]">Zones</div>
+        <div className="mt-2">
           <ZoneCards zones={zones} roomState={roomState} onZoneF={onZoneF} />
         </div>
       </div>
@@ -65,13 +65,14 @@ export function DashboardStats({ zones, roomState, onErrorModal, onZoneF }: Prop
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-[520px] rounded-lg border border-[#1E2623] bg-[#131817] p-5">
-            <div className="text-sm font-semibold text-[#E8F0ED]">
-              Route Failure Details
-            </div>
-            <div className="mt-2 text-sm text-[#5E7269] font-mono">
-              ERROR: NULL_DESTINATION
-              <br />
-              routing_matrix.csv last loaded: NEVER
+            <div className="text-sm font-semibold text-[#E8F0ED]">QUEUE STATUS — CRITICAL</div>
+            <div className="mt-3 space-y-1 text-sm font-mono text-[#5E7269]">
+              <div>847 items pending assignment</div>
+              <div>0 items successfully routed (last 3 hours)</div>
+              <div>211 items attempted — all failed</div>
+              <div className="pt-2 text-[#E24B4A]">Last failure: ROUTE_FAIL_NULL</div>
+              <div>routing_matrix.csv last loaded: NEVER</div>
+              <div>File not found at agent startup.</div>
             </div>
             <div className="mt-4 flex justify-end">
               <button

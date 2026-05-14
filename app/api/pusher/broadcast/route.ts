@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
+import { mergeRoomStateForTeam } from "@/app/api/pusher/store";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID ?? "",
@@ -23,6 +24,13 @@ export async function POST(req: Request) {
 
     const event = body.event ?? "room-update";
     const payload = body.payload ?? body.update ?? {};
+
+    // merge into server-side room state for new clients
+    if (event === "room-update") {
+      try {
+        mergeRoomStateForTeam(teamCode, payload);
+      } catch {}
+    }
 
     await pusher.trigger(`team-${teamCode}`, event, payload);
 

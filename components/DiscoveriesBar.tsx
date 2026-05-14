@@ -12,48 +12,46 @@ type Props = {
 };
 
 export function DiscoveriesBar({ discoveries, allArtifacts }: Props) {
-  const slots = Array.from({ length: 6 }).map((_, idx) => discoveries[idx]);
+  const slots = Array.from({ length: 4 }).map((_, idx) => discoveries[idx]);
 
   return (
     <div
       className={
-        "sticky bottom-0 border-t px-6 py-2 backdrop-blur " +
-        (allArtifacts
-          ? "border-[#1D9E75] bg-[#1D9E75]/10"
-          : "border-[#1E2623] bg-[#0C0F0E]/95")
+        "fixed bottom-0 left-0 right-0 z-30 h-12 border-t bg-[#0C0F0E] px-4 " +
+        (allArtifacts ? "border-[#1D9E75]" : "border-[#1E2623]")
       }
     >
-      <div className="flex items-center justify-between">
-        <div className="text-xs uppercase tracking-[0.3em] text-[#5E7269]">
+      <div className="flex h-full items-center gap-3">
+        <div className="shrink-0 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">
           Discoveries
         </div>
-        {allArtifacts && (
-          <div className="text-xs font-semibold text-[#1D9E75] animate-pulse">
-            All artifacts collected — check your phone
-          </div>
-        )}
-      </div>
-      <div className="mt-2 grid grid-cols-6 gap-2">
-        {slots.map((d, idx) => (
+        <div className="grid flex-1 grid-cols-4 gap-2 min-w-0">
+          {slots.map((d, idx) => (
           <div
             key={`slot-${idx}`}
             className={
-              "rounded-md border px-2 py-1 text-[10px] " +
+              "min-w-0 rounded-md border px-2 py-1 text-[11px] leading-4 " +
               (d
                 ? "border-[#1D9E75]/40 bg-[#1D9E75]/10 text-[#E8F0ED]"
                 : "border-[#1E2623] bg-[#131817] text-[#5E7269]")
             }
           >
             {d ? (
-              <div>
-                <div className="font-semibold text-[#1D9E75]">{d.member}</div>
-                <div>{d.label}</div>
+              <div className="flex min-w-0 items-center gap-2 truncate">
+                <div className="shrink-0 font-semibold text-[#1D9E75]">{d.member}</div>
+                <div className="min-w-0 truncate">— {d.label}</div>
               </div>
             ) : (
-              <div>Empty slot</div>
+              <div className="truncate">Empty slot</div>
             )}
           </div>
-        ))}
+          ))}
+        </div>
+        {allArtifacts && (
+          <div className="shrink-0 text-[11px] font-semibold text-[#1D9E75] animate-pulse">
+            All artifacts collected
+          </div>
+        )}
       </div>
     </div>
   );

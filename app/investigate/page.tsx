@@ -8,7 +8,8 @@ import { TeamChat } from "@/components/TeamChat";
 import { BrokenOutputTable } from "@/components/phase1/BrokenOutputTable";
 import { CrashLog } from "@/components/phase1/CrashLog";
 import { DashboardStats } from "@/components/phase1/DashboardStats";
-import { InboxPanel } from "@/components/phase1/InboxPanel";
+import { ClueStrip } from "@/components/phase1/ClueStrip";
+import { PanelModals } from "@/components/phase1/PanelModals";
 import { SlackChannel } from "@/components/phase1/SlackChannel";
 import {
   brokenOutputRows,
@@ -21,12 +22,16 @@ import { getGameState } from "@/lib/gameState";
 import { subscribeToTeam } from "@/lib/pusherClient";
 import type { RoomState } from "@/lib/roomState";
 import { addDiscovery, broadcastUpdate, getRoomState, updateRoomState } from "@/lib/roomState";
+import { InboxPanel } from "../../components/phase1/InboxPanel";
 
 export default function InvestigatePage() {
   const router = useRouter();
   const [roomState, setRoomState] = useState(() => getRoomState());
   const game = useMemo(() => getGameState(), []);
   const [currentPhase, setCurrentPhase] = useState(game.currentPhase);
+  const [selectedTicket, setSelectedTicket] = useState<{ preview: string; zone: string; time: string } | null>(null);
+  const [showTickerModal, setShowTickerModal] = useState(false);
+  type SelectedTicket = { preview: string; zone: string; time: string };
 
   useEffect(() => {
     if (!game.teamCode) {
@@ -81,20 +86,32 @@ export default function InvestigatePage() {
   const analystLocked = game.role !== "Analyst";
   const investigatorLocked = game.role !== "Investigator";
   const communicatorLocked = game.role !== "Communicator";
+  const solvedClue = roomState.systemNotesRead;
+
+  function solveClue() {
+    if (roomState.systemNotesRead) return;
+    pushUpdate(
+      { versionPassphraseEntered: true, systemNotesRead: true, artifact4: true },
+      { id: "clue-unlocked", label: "System notes unlocked" },
+    );
+  }
 
   return (
-    <div className="relative min-h-[calc(100vh-104px)] px-6 py-6 overflow-x-hidden">
+    <div className="relative h-[calc(100vh-120px)] px-6 py-5 overflow-hidden flex flex-col pb-12">
       <div className="fixed inset-0 pointer-events-none bg-[#E24B4A] opacity-[0.03] mix-blend-multiply animate-alarm-pulse" />
 
-      <div className="relative z-10 h-full grid grid-cols-[300px_1fr_300px] gap-6 min-w-0">
-        <aside className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0"}>
-          <div className="space-y-4">
+      <div className="relative z-10 grid h-[calc(100vh-120px)]" style={{ gridTemplateColumns: "280px 1fr 300px" }}>
+        <aside className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent"}>
+          <div className="space-y-4 pr-2">
             <DashboardStats
               zones={zoneCards}
               roomState={roomState}
-              onErrorModal={() =>
-                pushUpdate({ errorModalTriggered: true }, { id: "error-modal", label: "NULL_DESTINATION" })
-              }
+              onErrorModal={() => {
+                setShowTickerModal(true);
+                if (!roomState.errorModalTriggered) {
+                  pushUpdate({ errorModalTriggered: true }, { id: "error-modal", label: "NULL_DESTINATION" });
+                }
+              }}
               onZoneF={() =>
                 pushUpdate({ zoneFFound: true }, { id: "zone-f", label: "Zone F discarded" })
               }
@@ -133,70 +150,85 @@ export default function InvestigatePage() {
                 />
               </div>
             </div>
+            <ClueStrip solved={solvedClue} onSolved={solveClue} />
           </div>
         </aside>
 
-        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0"}>
-          <div className="rounded-lg border border-[#1E2623] bg-[#131817] px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[#5E7269]">ReliefNet Internal</div>
-                <div className="text-lg font-semibold tracking-tight">
-                  Incident: Agent Crash @ 02:47 IST
+        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent"}>
+          <div className="h-full min-h-0 px-4">
+            <div className="rounded-lg border border-[#1E2623] bg-[#131817] px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-[#5E7269]">ReliefNet Internal</div>
+                  <div className="text-lg font-semibold tracking-tight">
+                    Incident: Agent Crash @ 02:47 IST
+                  </div>
+                </div>
+                <div className="text-xs text-[#5E7269]">
+                  Queue frozen • Manual routing required
                 </div>
               </div>
-              <div className="text-xs text-[#5E7269]">
-                Queue frozen • Manual routing required
-              </div>
             </div>
-          </div>
 
-          <div className="mt-4 h-[calc(100%-120px)]">
-            <InboxPanel
-              items={inboxItems}
+            <div className="mt-4 flex-1 min-h-0">
+              <InboxPanel
+                items={inboxItems}
+                roomState={roomState}
+                onTooltipRead={(count: number) =>
+                  pushUpdate({ inboxTooltipsRead: count }, { id: "tooltips", label: "Tooltips reviewed" })
+                }
+                onPassphraseEntered={() =>
+                  pushUpdate({ versionPassphraseEntered: true }, { id: "passphrase", label: "Passphrase found" })
+                }
+                onSystemNotesRead={() =>
+                  pushUpdate(
+                    { systemNotesRead: true, artifact4: true },
+                    { id: "artifact-4", label: "Confidence threshold" },
+                  )
+                }
+                onSelectionChange={(item: SelectedTicket) => setSelectedTicket({ preview: item.preview, zone: item.zone, time: item.time })}
+              />
+            </div>
+
+            {selectedTicket && (
+              <div className="mt-4 rounded-lg border border-[#1E2623] bg-[#0C0F0E] p-4">
+                <div className="text-xs text-[#5E7269]">Ticket Detail</div>
+                <div className="mt-1 text-sm text-[#E8F0ED]">{selectedTicket.preview}</div>
+                <div className="mt-3 text-xs text-[#5E7269]">Zone {selectedTicket.zone} • {selectedTicket.time}</div>
+              </div>
+            )}
+          </div>
+        </main>
+
+        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent"}>
+          <div className="h-full min-h-0 pr-2">
+            <SlackChannel
+              messages={slackMessages}
               roomState={roomState}
-              onTooltipRead={(count) =>
-                pushUpdate({ inboxTooltipsRead: count }, { id: "tooltips", label: "Tooltips reviewed" })
-              }
-              onPassphraseEntered={() =>
-                pushUpdate({ versionPassphraseEntered: true }, { id: "passphrase", label: "Passphrase found" })
-              }
-              onSystemNotesRead={() =>
+              onScrolledToCSV={() =>
                 pushUpdate(
-                  { systemNotesRead: true, artifact4: true },
-                  { id: "artifact-4", label: "Confidence threshold" },
+                  { slackScrolledToCSV: true, artifact3: true },
+                  { id: "artifact-3", label: "Team names confirmed" },
+                )
+              }
+              onAttachmentOpened={() =>
+                pushUpdate(
+                  { priyaAttachmentOpened: true, artifact2: true },
+                  { id: "artifact-2", label: "Routing matrix CSV" },
                 )
               }
             />
           </div>
-        </main>
-
-        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "min-w-0"}>
-          <SlackChannel
-            messages={slackMessages}
-            roomState={roomState}
-            onScrolledToCSV={() =>
-              pushUpdate(
-                { slackScrolledToCSV: true, artifact3: true },
-                { id: "artifact-3", label: "Team names confirmed" },
-              )
-            }
-            onAttachmentOpened={() =>
-              pushUpdate(
-                { priyaAttachmentOpened: true, artifact2: true },
-                { id: "artifact-2", label: "Routing matrix CSV" },
-              )
-            }
-          />
         </aside>
+        <DiscoveriesBar discoveries={roomState.discoveries} allArtifacts={allArtifacts} />
       </div>
 
-      <div className="mt-4">
-        <DiscoveriesBar
-          discoveries={roomState.discoveries}
-          allArtifacts={allArtifacts}
-        />
-      </div>
+      <PanelModals
+        showTicker={showTickerModal}
+        showCsv={false}
+        tickerClose={() => setShowTickerModal(false)}
+        csvClose={() => undefined}
+      />
       <TeamChat />
     </div>
   );

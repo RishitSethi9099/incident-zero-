@@ -312,7 +312,7 @@ export const zoneCards: ZoneCard[] = [
     zone: "F",
     requests: 0,
     status: "critical",
-    warning: "Zone F webhook not configured. All Zone F requests discarded silently.",
+    warning: "Zone F webhook not configured. Requests discarded silently.",
   },
 ];
 

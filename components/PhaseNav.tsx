@@ -45,6 +45,7 @@ export function PhaseNav() {
         {steps.map((s, idx) => {
           const unlocked = phase >= s.phase;
           const active = activeSlug === s.slug;
+          const locked = !unlocked;
 
           const base = "flex items-center gap-2 rounded-md border px-3 py-1.5";
           const cls = unlocked
@@ -54,7 +55,10 @@ export function PhaseNav() {
             : "border-[#1E2623] bg-[#0C0F0E] text-[#5E7269]";
 
           return (
-            <div key={s.slug} className={`${base} ${cls}`}>
+            <div
+              key={s.slug}
+              className={`${base} ${cls} ${locked ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
               <div
                 className={
                   unlocked
@@ -76,9 +80,7 @@ export function PhaseNav() {
                 {idx + 1}
               </div>
               <div className="font-medium">{s.label}</div>
-              {!unlocked && (
-                <span className="text-xs text-[#5E7269]">Locked</span>
-              )}
+              {locked && <span className="text-xs text-[#5E7269]">🔒 Locked</span>}
             </div>
           );
         })}

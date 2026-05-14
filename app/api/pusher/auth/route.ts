@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
 
-import { getRoleOrder, getRosterForTeam, setRosterForTeam } from "@/app/api/pusher/store";
+import { getRoleOrder, getRosterForTeam, setRosterForTeam, getRoomStateForTeam } from "@/app/api/pusher/store";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID ?? "",
@@ -26,7 +26,8 @@ export async function POST(req: Request) {
     const existing = current.find((m) => m.name === memberName);
 
     if (existing) {
-      return NextResponse.json({ role: existing.role, channelName: `team-${teamCode}` });
+      const roomState = getRoomStateForTeam(teamCode);
+      return NextResponse.json({ role: existing.role, channelName: `team-${teamCode}`, roomState });
     }
 
     const role = roleOrder[current.length] ?? null;
@@ -46,7 +47,9 @@ export async function POST(req: Request) {
       await pusher.trigger(`team-${teamCode}`, "team-ready", { ready: true });
     }
 
-    return NextResponse.json({ role, channelName: `team-${teamCode}` });
+    const roomState = getRoomStateForTeam(teamCode);
+
+    return NextResponse.json({ role, channelName: `team-${teamCode}`, roomState });
   } catch (e) {
     return new NextResponse("Failed to join team", { status: 500 });
   }

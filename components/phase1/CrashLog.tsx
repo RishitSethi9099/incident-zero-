@@ -28,6 +28,10 @@ function colorForType(type: CrashLogEntry["type"]) {
   return "text-[#5E7269]";
 }
 
+function isHexLine(text: string) {
+  return /^[0-9a-f]+$/i.test(text);
+}
+
 export function CrashLog({
   entries,
   roomState,
@@ -88,6 +92,7 @@ export function CrashLog({
         {entries.map((e, idx) => {
           const isCorrupted = e.corrupted && e.decoded;
           const decoded = revealed[idx];
+          const isRouteFail = e.text.includes("ROUTE_FAIL_NULL");
 
           return (
             <div
@@ -119,6 +124,21 @@ export function CrashLog({
                       decode
                     </button>
                   </div>
+                ) : isHexLine(e.text) ? (
+                  <div className="flex items-center gap-2 text-[#EF9F27]">
+                    <span>⚠</span>
+                    <span className="break-all">{e.text}</span>
+                    <button
+                      type="button"
+                      onClick={startDecode}
+                      disabled={!decodeEnabled || roomState.crashLogDecoded}
+                      className="rounded-md border border-[#1E2623] bg-[#131817] px-2 py-0.5 text-[11px] text-[#E8F0ED] disabled:opacity-40"
+                    >
+                      decode
+                    </button>
+                  </div>
+                ) : isRouteFail ? (
+                  <span className="text-[#E24B4A]">{e.text}</span>
                 ) : (
                   <span>{e.text}</span>
                 )}
