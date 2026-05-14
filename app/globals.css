@@ -13,3 +13,26 @@ body {
 body {
   margin: 0;
 }
+
+/* Thin custom scrollbar utilities */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-\[\#1E2623\]::-webkit-scrollbar-thumb {
+  background-color: #1E2623;
+  border-radius: 4px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin {
+  scrollbar-color: #1E2623 transparent;
+}

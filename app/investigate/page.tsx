@@ -140,28 +140,27 @@ export default function InvestigatePage() {
   }
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-[#0C0F0E]">
+    <div className="relative h-full pb-12 overflow-hidden flex flex-col">
       <div className="fixed inset-0 pointer-events-none bg-[#E24B4A] opacity-[0.03] mix-blend-multiply animate-alarm-pulse" />
 
-      <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        <div className="grid flex-1 min-h-0 overflow-hidden" style={{ gridTemplateColumns: "280px 1fr 300px" }}>
-        {showNewMemberBanner && newMemberRole && (
-          <div className="col-span-3 mb-2 rounded-md border border-[#1D9E75]/40 bg-[#1D9E75]/10 px-4 py-2 text-sm text-[#E8F0ED]">
-            ⚡ New teammate joined — {newMemberRole} is now active
-          </div>
-        )}
-        {showDisconnectBanner && (
-          <div className="col-span-3 mb-2 rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
-            ⚠ Teammate disconnected. Their section is locked.
-          </div>
-        )}
+      {showNewMemberBanner && newMemberRole && (
+        <div className="relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#1D9E75]/40 bg-[#1D9E75]/10 px-4 py-2 text-sm text-[#E8F0ED]">
+          ⚡ New teammate joined — {newMemberRole} is now active
+        </div>
+      )}
+      {showDisconnectBanner && (
+        <div className="relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
+          ⚠ Teammate disconnected. Their section is locked.
+        </div>
+      )}
 
-        <aside className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "h-full flex flex-col min-w-0 border-r border-[#1E2623] bg-[#0C0F0E] overflow-hidden"}>
-          <div className="flex-shrink-0 border-b border-[#1E2623] px-4 py-3">
+      <div className="relative z-10 grid flex-1 min-h-0" style={{ gridTemplateColumns: "280px 1fr 300px", gridTemplateRows: "minmax(0, 1fr)" }}>
+
+        <aside className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0 border-r border-[#1E2623]"}>
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[#1E2623]">
             <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">Analyst</div>
           </div>
-
-          <div className="flex-shrink-0 border-b border-[#1E2623] px-4 py-4">
+          <div className="flex-shrink-0 px-4 py-3 border-b border-[#1E2623]">
             <DashboardStats
               zones={zoneCards}
               roomState={roomState}
@@ -176,52 +175,49 @@ export default function InvestigatePage() {
               }
             />
           </div>
-
-          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent px-4 py-4">
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm font-semibold text-[#E8F0ED]">Crash Log</div>
-                <div className="mt-2">
-                  <CrashLog
-                    entries={crashLogLines}
-                    roomState={roomState}
-                    decodeEnabled={roomState.versionPassphraseEntered || roomState.systemNotesRead}
-                    onDecoded={() =>
-                      pushUpdate(
-                        { crashLogDecoded: true, artifact1: true },
-                        { id: "artifact-1", label: "Crash log decoded" },
-                      )
-                    }
-                    onRedactedFound={() =>
-                      pushUpdate({ redactedLineFound: true }, { id: "redacted", label: "Redacted config" })
-                    }
-                  />
-                </div>
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
+            <div className="px-4 py-3 border-b border-[#1E2623]">
+              <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Crash Log</div>
+              <CrashLog
+                entries={crashLogLines}
+                roomState={roomState}
+                decodeEnabled={roomState.versionPassphraseEntered || roomState.systemNotesRead}
+                onDecoded={() =>
+                  pushUpdate(
+                    { crashLogDecoded: true, artifact1: true },
+                    { id: "artifact-1", label: "Crash log decoded" },
+                  )
+                }
+                onRedactedFound={() =>
+                  pushUpdate({ redactedLineFound: true }, { id: "redacted", label: "Redacted config" })
+                }
+              />
+            </div>
+            <div className="px-4 py-3 border-b border-[#1E2623]">
+              <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Broken Output</div>
+              <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E]">
+                <BrokenOutputTable
+                  rows={brokenOutputRows}
+                  roomState={roomState}
+                  onHiddenColumnsFound={() =>
+                    pushUpdate(
+                      { hiddenColumnsFound: true },
+                      { id: "hidden-columns", label: "Hidden columns found" },
+                    )
+                  }
+                />
               </div>
-              <div>
-                <div className="text-sm font-semibold text-[#E8F0ED]">Broken Output</div>
-                <div className="mt-2 rounded-md border border-[#1E2623] bg-[#0C0F0E]">
-                  <BrokenOutputTable
-                    rows={brokenOutputRows}
-                    roomState={roomState}
-                    onHiddenColumnsFound={() =>
-                      pushUpdate(
-                        { hiddenColumnsFound: true },
-                        { id: "hidden-columns", label: "Hidden columns found" },
-                      )
-                    }
-                  />
-                </div>
-              </div>
+            </div>
+            <div className="px-4 py-3">
               <ClueStrip solved={solvedClue} onSolved={solveClue} />
             </div>
           </div>
         </aside>
 
-        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "h-full flex flex-col min-w-0 overflow-hidden bg-[#0C0F0E]"}>
-          <div className="flex-shrink-0 border-b border-[#1E2623] px-4 py-3">
-            <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">{centerRoleLabel}</div>
-            <div className="mt-3 rounded-lg border border-[#1E2623] bg-[#131817] px-4 py-3">
+        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0"}>
+          <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-[#1E2623]">
+            <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269] mb-2">{centerRoleLabel}</div>
+            <div className="rounded-lg border border-[#1E2623] bg-[#131817] px-4 py-3">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-[#5E7269]">ReliefNet Internal</div>
@@ -236,7 +232,7 @@ export default function InvestigatePage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent px-4 py-4">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
             <InboxPanel
               items={inboxItems}
               roomState={roomState}
@@ -254,25 +250,21 @@ export default function InvestigatePage() {
               }
               onSelectionChange={(item: SelectedTicket) => setSelectedTicket({ preview: item.preview, zone: item.zone, time: item.time })}
             />
+            {selectedTicket && (
+              <div className="mx-4 mb-4 rounded-lg border border-[#1E2623] bg-[#0C0F0E] p-4">
+                <div className="text-xs text-[#5E7269]">Ticket Detail</div>
+                <div className="mt-1 text-sm text-[#E8F0ED]">{selectedTicket.preview}</div>
+                <div className="mt-3 text-xs text-[#5E7269]">Zone {selectedTicket.zone} • {selectedTicket.time}</div>
+              </div>
+            )}
           </div>
-
-          {selectedTicket && (
-            <div className="flex-shrink-0 border-t border-[#1E2623] m-4 rounded-lg bg-[#0C0F0E] p-4">
-              <div className="text-xs text-[#5E7269]">Ticket Detail</div>
-              <div className="mt-1 text-sm text-[#E8F0ED]">{selectedTicket.preview}</div>
-              <div className="mt-3 text-xs text-[#5E7269]">Zone {selectedTicket.zone} • {selectedTicket.time}</div>
-            </div>
-          )}
         </main>
 
-        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "h-full flex flex-col min-w-0 border-l border-[#1E2623] bg-[#0C0F0E] overflow-hidden"}>
-          <div className="flex-shrink-0 border-b border-[#1E2623] px-3 py-3">
+        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0 border-l border-[#1E2623]"}>
+          <div className="flex-shrink-0 px-3 py-3 border-b border-[#1E2623]">
             <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">Communicator</div>
-            <p className="text-[#1D9E75] font-mono text-sm mt-2">#ops-routing</p>
-            <p className="text-[#5E7269] text-xs">Recovered Slack channel</p>
           </div>
-
-          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent px-3 py-3">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
             <SlackChannel
               messages={slackMessages}
               roomState={roomState}
@@ -292,12 +284,8 @@ export default function InvestigatePage() {
           </div>
         </aside>
       </div>
-      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 h-12 z-50 bg-[#0C0F0E] border-t border-[#1E2623] flex items-center px-4 gap-3">
-        <DiscoveriesBar discoveries={roomState.discoveries} allArtifacts={allArtifacts} />
-      </div>
-
+      <DiscoveriesBar discoveries={roomState.discoveries} allArtifacts={allArtifacts} />
       <PanelModals
         showTicker={showTickerModal}
         showCsv={false}

@@ -43,6 +43,19 @@ export default function WaitingPage() {
   const [teamStarted, setTeamStarted] = useState(false);
   const [timerStarted, setTimerStarted] = useState(false);
 
+  // Shared: marks the game as started on the server, then navigates.
+  // Called by the person who initiates (countdown=0 or button), and also
+  // triggered locally when a game-started push arrives from a teammate.
+  const doStart = useMemo(() => (size: number) => {
+    setGameState({ teamSize: size as 2 | 3 });
+    fetch("/api/pusher/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamCode: team.teamCode, teamSize: size }),
+    }).catch(() => undefined);
+    router.push("/investigate");
+  }, [team.teamCode, router]);
+
   useEffect(() => {
     if (!team.teamCode || !team.memberName) {
       router.replace("/");
@@ -84,6 +97,12 @@ export default function WaitingPage() {
       channel.bind("member-joined", (data: Member) => {
         setMembers((prev) => sortMembers([...prev.filter((member) => member.name !== data.name), data]));
       });
+      // Instant redirect when a teammate fires the start
+      channel.bind("game-started", (data: { teamSize?: number }) => {
+        if (!mounted) return;
+        setGameState({ teamSize: (data.teamSize ?? 2) as 2 | 3 });
+        router.push("/investigate");
+      });
       return () => {
         mounted = false;
         window.clearInterval(rosterInterval);
@@ -97,7 +116,7 @@ export default function WaitingPage() {
       window.clearInterval(rosterInterval);
       window.clearInterval(heartbeatInterval);
     };
-  }, [team.memberName, team.role, team.teamCode]);
+  }, [team.memberName, team.role, team.teamCode, router]);
 
   const connectedCount = members.length;
   const activeMembers = members.slice(0, 3);
@@ -113,6 +132,7 @@ export default function WaitingPage() {
       router.push("/investigate");
     }
   }, [teamStarted, team.role, teamSize, router]);
+
 
   useEffect(() => {
     if (canStart && !timerStarted) {
@@ -131,35 +151,17 @@ export default function WaitingPage() {
   useEffect(() => {
     if (countdown === null) return;
     if (countdown <= 0) {
-      const markStarted = async () => {
-        await fetch("/api/pusher/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ teamCode: team.teamCode }),
-        }).catch(() => undefined);
-        setGameState({ teamSize: teamSize as 2 | 3 });
-        router.push("/investigate");
-      };
-      void markStarted();
+      doStart(teamSize);
       return;
     }
     const id = window.setTimeout(() => setCountdown((current) => (current ? current - 1 : 0)), 1000);
     return () => window.clearTimeout(id);
-  }, [countdown, router, teamSize, team.teamCode]);
+  }, [countdown, doStart, teamSize]);
 
   function startNow() {
     if (!canStart) return;
-    const markStarted = async () => {
-      await fetch("/api/pusher/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamCode: team.teamCode }),
-      }).catch(() => undefined);
-      setManualStart(true);
-      setGameState({ teamSize: teamSize as 2 | 3 });
-      setCountdown(3);
-    };
-    void markStarted();
+    setManualStart(true);
+    doStart(teamSize);
   }
 
   if (teamStarted && team.role) {

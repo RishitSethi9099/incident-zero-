@@ -31,11 +31,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#0C0F0E] text-[#E8F0ED] font-sans">
-        <div className="min-h-full flex flex-col">
+      <body className="h-full bg-[#0C0F0E] text-[#E8F0ED] font-sans">
+        <div className="h-full flex flex-col">
           <TopBar />
           <PhaseNav />
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 min-h-0">{children}</div>
         </div>
       </body>
     </html>
