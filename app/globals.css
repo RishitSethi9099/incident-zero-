@@ -24,8 +24,17 @@ body {
   border-radius: 4px;
 }
 
+.scrollbar-thumb-\[\#1D9E75\]::-webkit-scrollbar-thumb {
+  background-color: #1D9E75;
+  border-radius: 4px;
+}
+
 .scrollbar-track-transparent::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.scrollbar-track-\[\#0C0F0E\]::-webkit-scrollbar-track {
+  background: #0C0F0E;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -35,4 +44,25 @@ body {
 
 .scrollbar-thin {
   scrollbar-color: #1E2623 transparent;
+}
+
+.scrollbar-visible {
+  scrollbar-width: auto;
+  scrollbar-color: #1D9E75 #0C0F0E;
+  scrollbar-gutter: stable;
+}
+
+.scrollbar-visible::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background-color: #1D9E75;
+  border: 2px solid #0C0F0E;
+  border-radius: 9999px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: #0C0F0E;
 }

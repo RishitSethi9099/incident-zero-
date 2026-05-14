@@ -14,6 +14,9 @@ export const crashLogLines: CrashLogLine[] = [
     text: "Agent initialized. Queue size: 211 requests.",
     type: "info",
     corrupted: false,
+    decoded: undefined,
+    redacted: false,
+    actual: undefined,
   },
   {
     time: "02:38:44",
@@ -21,6 +24,8 @@ export const crashLogLines: CrashLogLine[] = [
     type: "warn",
     corrupted: true,
     decoded: "routing config has no team definitions loaded",
+    redacted: false,
+    actual: undefined,
   },
   {
     time: "02:41:12",
@@ -28,6 +33,8 @@ export const crashLogLines: CrashLogLine[] = [
     type: "warn",
     corrupted: true,
     decoded: "key used: RN_ROUTING_KEY_2024",
+    redacted: false,
+    actual: undefined,
   },
   {
     time: "02:43:58",
@@ -36,18 +43,25 @@ export const crashLogLines: CrashLogLine[] = [
     corrupted: false,
     redacted: true,
     actual: "Fallback attempted. Config: routing_v1_backup — file not found",
+    decoded: undefined,
   },
   {
     time: "02:47:01",
     text: "Process terminated. Exit code: ROUTE_FAIL_NULL",
     type: "error",
     corrupted: false,
+    decoded: undefined,
+    redacted: false,
+    actual: undefined,
   },
   {
     time: "02:47:13",
     text: "System offline. Queue frozen.",
     type: "error",
     corrupted: false,
+    decoded: undefined,
+    redacted: false,
+    actual: undefined,
   },
 ];
 

@@ -17,7 +17,7 @@ export function DiscoveriesBar({ discoveries, allArtifacts }: Props) {
   return (
     <div
       className={
-        "fixed bottom-0 left-0 right-0 z-30 h-12 border-t bg-[#0C0F0E] px-4 " +
+        "fixed bottom-0 left-0 right-0 z-50 h-12 border-t bg-[#0C0F0E] px-4 " +
         (allArtifacts ? "border-[#1D9E75]" : "border-[#1E2623]")
       }
     >

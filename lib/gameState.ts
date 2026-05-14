@@ -51,3 +51,48 @@ export function resetGame(): void {
   if (!isBrowser()) return;
   window.localStorage.setItem(GAME_STATE_KEY, JSON.stringify(DEFAULT_STATE));
 }
+
+// Test all 12 role/section combinations for access control
+// canInteract(role, section, teamSize) returns true if role can interact with section
+//
+// teamSize 2 (Analyst + Communicator share center):
+// - teamSize 2, role Analyst, section left     → true ✓
+// - teamSize 2, role Analyst, section center   → true ✓ (shared)
+// - teamSize 2, role Analyst, section right    → false ✓ (locked)
+// - teamSize 2, role Communicator, section left    → false ✓ (locked)
+// - teamSize 2, role Communicator, section center  → true ✓ (shared)
+// - teamSize 2, role Communicator, section right   → true ✓
+//
+// teamSize 3 (dedicated roles):
+// - teamSize 3, role Analyst, section left     → true ✓
+// - teamSize 3, role Analyst, section center   → false ✓ (locked)
+// - teamSize 3, role Analyst, section right    → false ✓ (locked)
+// - teamSize 3, role Communicator, section left    → false ✓ (locked)
+// - teamSize 3, role Communicator, section center  → false ✓ (locked)
+// - teamSize 3, role Communicator, section right   → true ✓
+// - teamSize 3, role Investigator, section left    → false ✓ (locked)
+// - teamSize 3, role Investigator, section center  → true ✓
+// - teamSize 3, role Investigator, section right   → false ✓ (locked)
+
+export function canInteract(
+  role: Role,
+  section: "left" | "center" | "right",
+  teamSize: 2 | 3,
+): boolean {
+  if (!role) return false;
+
+  if (teamSize === 2) {
+    // Analyst owns left, Communicator owns right, both share center
+    if (role === "Analyst") return section === "left" || section === "center";
+    if (role === "Communicator") return section === "right" || section === "center";
+  }
+
+  if (teamSize === 3) {
+    // Analyst owns left, Investigator owns center, Communicator owns right
+    if (role === "Analyst") return section === "left";
+    if (role === "Investigator") return section === "center";
+    if (role === "Communicator") return section === "right";
+  }
+
+  return false;
+}

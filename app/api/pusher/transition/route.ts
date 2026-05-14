@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Pusher from "pusher";
+import { mergeRoomStateForTeam } from "@/app/api/pusher/store";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID ?? "",
@@ -16,6 +17,9 @@ export async function POST(req: Request) {
     const phase = body.phase === 2 || body.phase === 3 ? body.phase : 1;
 
     if (!teamCode) return new NextResponse("Missing teamCode", { status: 400 });
+
+    // Persist phase to room state for new clients
+    mergeRoomStateForTeam(teamCode, { phase });
 
     await pusher.trigger(`team-${teamCode}`, "phase-transition", { phase });
 

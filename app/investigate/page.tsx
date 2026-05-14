@@ -140,23 +140,33 @@ export default function InvestigatePage() {
   }
 
   return (
-    <div className="relative h-full pb-12 overflow-hidden flex flex-col">
+    <div className="relative h-[calc(100vh-104px)] flex flex-col overflow-hidden">
       <div className="fixed inset-0 pointer-events-none bg-[#E24B4A] opacity-[0.03] mix-blend-multiply animate-alarm-pulse" />
 
       {showNewMemberBanner && newMemberRole && (
-        <div className="relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#1D9E75]/40 bg-[#1D9E75]/10 px-4 py-2 text-sm text-[#E8F0ED]">
+        <div className="flex-shrink-0 relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#1D9E75]/40 bg-[#1D9E75]/10 px-4 py-2 text-sm text-[#E8F0ED]">
           ⚡ New teammate joined — {newMemberRole} is now active
         </div>
       )}
       {showDisconnectBanner && (
-        <div className="relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
+        <div className="flex-shrink-0 relative z-10 mb-2 mx-6 mt-2 rounded-md border border-[#E24B4A]/40 bg-[#E24B4A]/10 px-4 py-2 text-sm text-[#E8F0ED]">
           ⚠ Teammate disconnected. Their section is locked.
         </div>
       )}
 
-      <div className="relative z-10 grid flex-1 min-h-0" style={{ gridTemplateColumns: "280px 1fr 300px", gridTemplateRows: "minmax(0, 1fr)" }}>
+      <div
+        className="relative z-10 grid h-full min-h-0"
+        style={{ gridTemplateColumns: "280px 1fr 300px", gridTemplateRows: "minmax(0, 1fr)" }}
+      >
 
-        <aside className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0 border-r border-[#1E2623]"}>
+        <aside
+          className={(analystLocked ? "opacity-40 pointer-events-none " : "") + "h-full min-h-0 flex flex-col overflow-y-auto min-w-0 border-r border-[#1E2623] scrollbar-visible"}
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#1D9E75 #0C0F0E",
+          }}
+        >
+          {analystLocked && <div className="absolute inset-0 z-20 flex items-center justify-center text-xs uppercase text-[#5E7269] pointer-events-none">ANALYST</div>}
           <div className="flex-shrink-0 px-4 py-3 border-b border-[#1E2623]">
             <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">Analyst</div>
           </div>
@@ -175,46 +185,45 @@ export default function InvestigatePage() {
               }
             />
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
-            <div className="px-4 py-3 border-b border-[#1E2623]">
-              <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Crash Log</div>
-              <CrashLog
-                entries={crashLogLines}
+          <div className="px-4 py-3 border-b border-[#1E2623]">
+            <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Crash Log</div>
+            <CrashLog
+              entries={crashLogLines}
+              roomState={roomState}
+              decodeEnabled={roomState.priyaAttachmentOpened || roomState.slackScrolledToCSV}
+              onDecoded={() =>
+                pushUpdate(
+                  { crashLogDecoded: true, artifact1: true },
+                  { id: "artifact-1", label: "Crash log decoded" },
+                )
+              }
+              onRedactedFound={() =>
+                pushUpdate({ redactedLineFound: true }, { id: "redacted", label: "Redacted config" })
+              }
+            />
+          </div>
+          <div className="px-4 py-3 border-b border-[#1E2623]">
+            <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Broken Output</div>
+            <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E]">
+              <BrokenOutputTable
+                rows={brokenOutputRows}
                 roomState={roomState}
-                decodeEnabled={roomState.versionPassphraseEntered || roomState.systemNotesRead}
-                onDecoded={() =>
+                onHiddenColumnsFound={() =>
                   pushUpdate(
-                    { crashLogDecoded: true, artifact1: true },
-                    { id: "artifact-1", label: "Crash log decoded" },
+                    { hiddenColumnsFound: true },
+                    { id: "hidden-columns", label: "Hidden columns found" },
                   )
-                }
-                onRedactedFound={() =>
-                  pushUpdate({ redactedLineFound: true }, { id: "redacted", label: "Redacted config" })
                 }
               />
             </div>
-            <div className="px-4 py-3 border-b border-[#1E2623]">
-              <div className="text-sm font-semibold text-[#E8F0ED] mb-2">Broken Output</div>
-              <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E]">
-                <BrokenOutputTable
-                  rows={brokenOutputRows}
-                  roomState={roomState}
-                  onHiddenColumnsFound={() =>
-                    pushUpdate(
-                      { hiddenColumnsFound: true },
-                      { id: "hidden-columns", label: "Hidden columns found" },
-                    )
-                  }
-                />
-              </div>
-            </div>
-            <div className="px-4 py-3">
-              <ClueStrip solved={solvedClue} onSolved={solveClue} />
-            </div>
+          </div>
+          <div className="flex-shrink-0 px-4 py-3 pb-12">
+            <ClueStrip solved={solvedClue} onSolved={solveClue} />
           </div>
         </aside>
 
-        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0"}>
+        <main className={(investigatorLocked ? "opacity-40 pointer-events-none " : "") + "h-full min-h-0 overflow-hidden flex flex-col min-w-0"}>
+          {investigatorLocked && <div className="absolute inset-0 z-20 flex items-center justify-center text-xs uppercase text-[#5E7269] pointer-events-none">INVESTIGATOR</div>}
           <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-[#1E2623]">
             <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269] mb-2">{centerRoleLabel}</div>
             <div className="rounded-lg border border-[#1E2623] bg-[#131817] px-4 py-3">
@@ -232,7 +241,7 @@ export default function InvestigatePage() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
+          <div className="flex-1 min-h-0 overflow-y-scroll scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent pb-14">
             <InboxPanel
               items={inboxItems}
               roomState={roomState}
@@ -260,11 +269,12 @@ export default function InvestigatePage() {
           </div>
         </main>
 
-        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "min-h-0 overflow-hidden flex flex-col min-w-0 border-l border-[#1E2623]"}>
+        <aside className={(communicatorLocked ? "opacity-40 pointer-events-none " : "") + "h-full min-h-0 overflow-hidden flex flex-col min-w-0 border-l border-[#1E2623]"}>
+          {communicatorLocked && <div className="absolute inset-0 z-20 flex items-center justify-center text-xs uppercase text-[#5E7269] pointer-events-none">COMMUNICATOR</div>}
           <div className="flex-shrink-0 px-3 py-3 border-b border-[#1E2623]">
             <div className="rounded-md border border-[#1E2623] bg-[#0C0F0E] px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-[#5E7269]">Communicator</div>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
+          <div className="flex-1 min-h-0 overflow-y-scroll pb-14 scrollbar-thin scrollbar-thumb-[#1E2623] scrollbar-track-transparent">
             <SlackChannel
               messages={slackMessages}
               roomState={roomState}
