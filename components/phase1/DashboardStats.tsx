@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import type { RoomState } from "@/lib/roomState";
 import { ZoneCards } from "@/components/phase1/ZoneCards";
+import Modal from "@/components/Modal";
+import ZoneA from "@/components/zones/ZoneA";
 
 type ZoneCard = {
   zone: string;
@@ -22,6 +24,15 @@ type Props = {
 export function DashboardStats({ zones, roomState, onErrorModal, onZoneF }: Props) {
   const [count, setCount] = useState(847);
   const [showModal, setShowModal] = useState(false);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [solvedPuzzles, setSolvedPuzzles] = useState<Record<string, boolean>>({
+    A: false,
+    B: false,
+    C: false,
+    D: false,
+    E: false,
+    F: false,
+  });
 
   useEffect(() => {
     const id = window.setInterval(() => setCount((c) => c + 1), 12000);
@@ -58,8 +69,18 @@ export function DashboardStats({ zones, roomState, onErrorModal, onZoneF }: Prop
       <div className="rounded-lg border border-[#1E2623] bg-[#0C0F0E] p-3">
         <div className="text-sm font-semibold text-[#E8F0ED]">Zones</div>
         <div className="mt-2">
-          <ZoneCards zones={zones} roomState={roomState} onZoneF={onZoneF} />
+          <ZoneCards zones={zones} roomState={roomState} onZoneF={onZoneF} onOpenZone={(z) => setActiveModal(z)} />
         </div>
+
+        <Modal open={activeModal !== null} title={activeModal ? `Zone ${activeModal}` : undefined} onClose={() => setActiveModal(null)}>
+          {activeModal === "A" && (
+            <ZoneA
+              solved={!!activeModal && solvedPuzzles.A}
+              onSolved={() => setSolvedPuzzles((s) => ({ ...s, A: true }))}
+            />
+          )}
+          {activeModal && activeModal !== "A" && <div className="text-sm text-zinc-300">Placeholder for Zone {activeModal} — puzzle coming soon.</div>}
+        </Modal>
       </div>
 
       {showModal && (

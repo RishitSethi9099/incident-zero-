@@ -13,9 +13,10 @@ type Props = {
   zones: ZoneCard[];
   roomState: RoomState;
   onZoneF: () => void;
+  onOpenZone?: (zone: string) => void;
 };
 
-export function ZoneCards({ zones, roomState, onZoneF }: Props) {
+export function ZoneCards({ zones, roomState, onZoneF, onOpenZone }: Props) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {zones.map((z) => (
@@ -24,6 +25,7 @@ export function ZoneCards({ zones, roomState, onZoneF }: Props) {
           key={z.zone}
           onClick={() => {
             if (z.zone === "F" && !roomState.zoneFFound) onZoneF();
+            if (onOpenZone) onOpenZone(z.zone);
           }}
           className={
             "rounded-md border px-2 py-2 text-left " +

@@ -16,11 +16,53 @@ function formatIst(d: Date) {
 }
 
 export function TopBar() {
-  const [now, setNow] = useState<Date>(() => new Date());
-  const [roomState, setRoomState] = useState(() => getRoomState());
-  const [gameState, setLocalGameState] = useState(() => getGameState());
+  const [now, setNow] = useState<Date | null>(() => null);
+  const DEFAULT_ROOM_STATE = {
+    crashLogDecoded: false,
+    redactedLineFound: false,
+    hiddenColumnsFound: false,
+    errorModalTriggered: false,
+    slackScrolledToCSV: false,
+    priyaAttachmentOpened: false,
+    arjunDeleteFound: false,
+    inboxTooltipsRead: 0,
+    zoneFFound: false,
+    versionPassphraseEntered: false,
+    systemNotesRead: false,
+    artifact1: false,
+    artifact2: false,
+    artifact3: false,
+    artifact4: false,
+    corkboardSubmitted: false,
+    corkboardCorrect: false,
+    corkboardAttempts: 0,
+    endpointDeployed: false,
+    twist1Handled: false,
+    twist2Handled: false,
+    twist3Handled: false,
+    twist4Handled: false,
+    twist5Handled: false,
+    liveAccuracyScore: 0,
+    discoveries: [],
+  };
+
+  const DEFAULT_GAME_STATE = {
+    teamCode: "",
+    memberName: "",
+    role: null,
+    teamSize: 2,
+    currentPhase: 1,
+    phase2Penalty: 0,
+    submissionUrl: "",
+    endpointUrl: "",
+  };
+
+  const [roomState, setRoomState] = useState(() => DEFAULT_ROOM_STATE);
+  const [gameState, setLocalGameState] = useState(() => DEFAULT_GAME_STATE);
 
   useEffect(() => {
+    // initialize time on client only to avoid SSR/client mismatch
+    setNow(new Date());
     const id = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -39,7 +81,7 @@ export function TopBar() {
     };
   }, []);
 
-  const ist = useMemo(() => formatIst(now), [now]);
+  const ist = useMemo(() => (now ? formatIst(now) : null), [now]);
   const allArtifacts =
     roomState.artifact1 &&
     roomState.artifact2 &&
@@ -85,7 +127,8 @@ export function TopBar() {
         )}
 
         <div className="text-xs text-[#5E7269] tabular-nums">
-          <span className="text-[#1D9E75]">IST</span> {ist}
+          <span className="text-[#1D9E75]">IST</span>{' '}
+          {ist ?? <span className="text-zinc-500">--:--:--</span>}
         </div>
       </div>
     </header>
